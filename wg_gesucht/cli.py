@@ -3,10 +3,10 @@ import sys
 import json
 import atexit
 import click
-from .create_results_folders import create_folders
-from .logger import get_logger
-from . import user_details as user
-from .crawler import WgGesuchtCrawler
+from create_results_folders import create_folders
+from logger import get_logger
+import user_details as user
+from crawler import WgGesuchtCrawler
 
 
 @click.command()

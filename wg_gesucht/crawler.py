@@ -37,7 +37,7 @@ class WgGesuchtCrawler:
         self.filter_names = filter_names
         self.share_email = share_email
         self.submit_message_url = (
-            "https://www.wg-gesucht.de/ajax/api/Smp/api.php?action=conversations"
+            "https://www.wg-gesucht.de/ajax/conversations.php?action=conversations"
         )
         self.session = requests.Session()
         self.logger = self.get_logger()
@@ -87,7 +87,7 @@ class WgGesuchtCrawler:
 
         try:
             login = self.session.post(
-                "https://www.wg-gesucht.de/ajax/api/Smp/api.php?action=login",
+                "https://www.wg-gesucht.de/ajax/sessions.php?action=login",
                 json=payload,
             )
         except requests.exceptions.Timeout:
@@ -96,6 +96,7 @@ class WgGesuchtCrawler:
         except requests.exceptions.ConnectionError:
             self.logger.exception("Could not connect to internet")
             sys.exit(1)
+
 
         if login.json() is True:
             self.logger.info("Logged in successfully")
@@ -372,6 +373,9 @@ class WgGesuchtCrawler:
             "messages": [{"content": template_text, "message_type": "text"}],
         }
 
+    def exstract_submitter_name_and_move_in_month(self, ad_page_soup):
+        return
+
     def email_apartment(self, url, template_text):
         ad_info = self.get_info_from_ad(url)
 
@@ -408,7 +412,9 @@ class WgGesuchtCrawler:
             .rstrip()
             .lstrip()
         )
+
         ad_info["ad_submitter"] = ad_submitter
+        template_text = template_text.replace("$name", ad_info["ad_submitter"])
 
         headers = {
             "Content-Type": "application/json",
@@ -431,9 +437,11 @@ class WgGesuchtCrawler:
         json_data = json.dumps(payload)
 
         try:
+            print("ass")
             sent_message = self.session.post(
                 self.submit_message_url, data=json_data, headers=headers
             ).json()
+            print("ass")
         except requests.exceptions.Timeout:
             self.logger.exception(
                 "Timed out sending a message to %s, will try again next time",
