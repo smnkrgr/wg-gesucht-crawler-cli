@@ -11,6 +11,7 @@ import logging
 import datetime
 import requests
 from bs4 import BeautifulSoup
+import telegram
 
 
 class InfoFilter(logging.Filter):
@@ -43,6 +44,10 @@ class WgGesuchtCrawler:
         self.logger = self.get_logger()
         self.counter = 1
         self.continue_next_page = True
+
+        # Telegram bot
+        self.bot = telegram.Bot(token=self.login_info["token"])
+        self.chat_id = self.login_info["chat_id"]
 
     def get_logger(self):
         formatter = logging.Formatter(
@@ -373,8 +378,11 @@ class WgGesuchtCrawler:
             "messages": [{"content": template_text, "message_type": "text"}],
         }
 
-    def exstract_submitter_name_and_move_in_month(self, ad_page_soup):
-        return
+    def construct_telegram_message(self, ad_info):
+        message = "Contacted " + ad_info["ad_submitter"] +"! \n" + \
+                "Ad title: "+ ad_info["ad_title"] + " \n" + \
+                "Ad URL: https://wg-gesucht.de/" + ad_info["ad_url"] 
+        return message
 
     def email_apartment(self, url, template_text):
         ad_info = self.get_info_from_ad(url)
@@ -437,11 +445,9 @@ class WgGesuchtCrawler:
         json_data = json.dumps(payload)
 
         try:
-            print("ass")
             sent_message = self.session.post(
                 self.submit_message_url, data=json_data, headers=headers
             ).json()
-            print("ass")
         except requests.exceptions.Timeout:
             self.logger.exception(
                 "Timed out sending a message to %s, will try again next time",
@@ -459,6 +465,8 @@ class WgGesuchtCrawler:
         self.update_files(url, ad_info)
         time_now = datetime.datetime.now().strftime("%H:%M:%S")
         self.logger.info("Message Sent to %s at %s!", ad_info["ad_submitter"], time_now)
+        telegram_message = self.construct_telegram_message(ad_info)
+        self.bot.send_message(text=telegram_message, chat_id=self.chat_id)
 
     def search(self):
         if self.counter < 2:

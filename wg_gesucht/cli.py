@@ -102,7 +102,7 @@ def cli(
         filter_names = [filter.strip().lower() for filter in filter_names.split(",")]
 
     wg_gesucht = WgGesuchtCrawler(
-        login_info, wg_ad_links, offline_ad_links, logs_folder, template, filter_names, share_email
+            login_info, wg_ad_links, offline_ad_links, logs_folder, template, filter_names, share_email
     )
     wg_gesucht.sign_in()
     logger.warning("Running until canceled, check info.log for details...")
